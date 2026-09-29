@@ -31,6 +31,7 @@ def get_redis_client(url: str | None = None):
         import fakeredis
 
         return fakeredis.FakeRedis(decode_responses=True)
+    print(f"Connecting to Redis at {url}...")
     return redis.from_url(url, decode_responses=True)
 
 
