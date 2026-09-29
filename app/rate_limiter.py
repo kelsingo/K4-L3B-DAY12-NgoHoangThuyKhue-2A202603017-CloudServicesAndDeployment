@@ -61,7 +61,7 @@ class RateLimiter:
         sẽ chặn nhầm ngay ở request thứ ``limit``.
         """
 
-        now = now if now is None else time.time()
+        now = now if now is not None else time.time()
         key = self._key(user_id)
         limit_count = self.hit_count(user_id, now)
         if limit_count >= self.limit:
