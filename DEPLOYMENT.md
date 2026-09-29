@@ -10,8 +10,8 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
+| Họ và tên | Ngô Hoàng Thụy Khuê |
+| Mã học viên | 2A202603017 |
 | Repo | (điền link repo K4-L3B-DAY12-HoVaTen-MSSV-CloudServicesAndDeployment) |
 
 ## Service

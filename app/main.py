@@ -109,7 +109,8 @@ def ready(store: ConversationStore = Depends(get_store)):
     Khác /health ở chỗ: endpoint này ĐƯỢC PHÉP kiểm tra dependency. Load
     balancer dùng nó để quyết định có đẩy request vào instance này không.
     """
-    raise NotImplementedError("TODO (CP4): cài đặt /ready")
+    # raise NotImplementedError("TODO (CP4): cài đặt /ready")
+    
 
 
 # ─────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ def ask(
     ``user_id`` do ``verify_api_key`` trả về, nên request không có API key
     hợp lệ sẽ dừng ở 401 trước khi chạm vào bất cứ dòng nào ở đây.
     """
-    raise NotImplementedError("TODO (CP3/CP4): cài đặt /ask")
+    # raise NotImplementedError("TODO (CP3/CP4): cài đặt /ask")
 
 
 if __name__ == "__main__":

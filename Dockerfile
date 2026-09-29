@@ -1,34 +1,73 @@
 # ═══════════════════════════════════════════════════════════════════
-# CP2 — Containerization
-#
-# Dưới đây là Dockerfile "chạy được nhưng chưa production": một stage,
-# chạy bằng user root, không có health check, base image nặng.
-#
-# NHIỆM VỤ: sửa file này thành bản production-ready. Yêu cầu:
-#   [ ] Multi-stage build: stage `builder` cài dependency, stage runtime
-#       chỉ copy kết quả sang → image nhỏ hơn, không mang theo compiler.
-#       Cú pháp: `FROM python:3.11-slim AS builder`
-#   [ ] Base image slim (hoặc alpine), không dùng `python:3.11` bản đầy đủ
-#   [ ] COPY requirements.txt và pip install TRƯỚC khi COPY source code
-#       (Docker cache theo layer: sửa 1 dòng code không phải cài lại thư viện)
-#   [ ] Tạo user thường và chuyển sang bằng lệnh `USER` — container chạy
-#       root nghĩa là ai thoát được khỏi app cũng thành root trên host
-#   [ ] Có `HEALTHCHECK` gọi vào endpoint /health
-#   [ ] Đọc cổng từ biến môi trường PORT (cloud tự gán cổng, không cố định 8000)
-#
-# Kiểm tra:  pytest tests/test_cp2.py -v
-# Build thử: docker build -t day12-agent:prod .
-#            docker images day12-agent:prod     # xem dung lượng
+# CP2 — Containerization (Production Ready Solution)
 # ═══════════════════════════════════════════════════════════════════
 
-FROM python:3.11
+# -------------------------------------------------------------------
+# STAGE 1: Builder
+# -------------------------------------------------------------------
+# Mục đích: Cài đặt dependencies và build wheels.
+# Sử dụng base image slim để giảm dung lượng ngay từ giai đoạn này.
+FROM python:3.11-slim AS builder
 
+# Thiết lập thư mục làm việc cho stage build
 WORKDIR /app
 
+# Yêu cầu: COPY requirements.txt và pip install TRƯỚC khi COPY source code.
+# Việc này giúp Docker tận dụng cache layer. Nếu code thay đổi nhưng
+# requirements không đổi, bước cài đặt thư viện sẽ không bị chạy lại.
+COPY requirements.txt .
+
+# Cài đặt dependencies vào thư mục cục bộ (ví dụ: /install)
+# `--no-cache-dir` giúp image không phình to do lưu trữ cache của pip.
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# -------------------------------------------------------------------
+# STAGE 2: Runtime (Production Image)
+# -------------------------------------------------------------------
+# Đây là image cuối cùng sẽ chạy.
+FROM python:3.11-slim
+
+# Yêu cầu: Base image slim (đã chọn ở trên). Không dùng bản full.
+# Cài đặt curl để phục vụ cho HEALTHCHECK (nếu image gốc chưa có).
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Yêu cầu: Tạo user thường và chuyển sang bằng lệnh USER.
+# Không chạy ứng dụng dưới quyền root. Chúng ta tạo user 'appuser'.
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+RUN groupadd -g ${GROUP_ID} appgroup && \
+    useradd -l -u ${USER_ID} -g appgroup -ms /bin/bash appuser
+
+# Thiết lập thư mục làm việc
+WORKDIR /app
+
+# Copy toàn bộ thư viện đã cài đặt từ stage 'builder' sang stage này.
+# Thư viện thường nằm ở /root/.local nếu dùng --user, hoặc /usr/local nếu cài global.
+# Ở đây ta copy từ vị trí mặc định của user root trong builder sang user của runtime.
+COPY --from=builder /root/.local /root/.local
+
+# Đảm bảo các script binary (nếu có) trong .local/bin có thể được thực thi
+ENV PATH=/root/.local/bin:$PATH
+
+# Copy source code ứng dụng từ máy host vào image
 COPY . .
 
-RUN pip install -r requirements.txt
+# Yêu cầu: Có HEALTHCHECK gọi vào endpoint /health.
+# Kiểm tra mỗi 30 giây, timeout 5 giây, thử lại 3 lần.
+# Dùng curl để gọi nội bộ tới cổng $PORT (sẽ được định nghĩa ở ENV).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-EXPOSE 8000
+# Yêu cầu: Đọc cổng từ biến môi trường PORT.
+# Mặc định là 8000 nếu không được cung cấp.
+ENV PORT=8000
+EXPOSE ${PORT}
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Chuyển sang user thường đã tạo ở trên
+USER appuser
+
+# Lệnh khởi chạy ứng dụng. Sử dụng biến môi trường PORT.
+# Cần đảm bảo app.main:app trong CMD khớp với cấu trúc project của bạn.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

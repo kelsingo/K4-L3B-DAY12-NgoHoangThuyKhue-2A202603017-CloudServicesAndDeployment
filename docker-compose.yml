@@ -24,21 +24,41 @@
 services:
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
+    container_name: redis
+    networks:
+      - agent_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 3s
-      retries: 5
+      timeout: 5s
+      retries: 3
 
-  # TODO (CP2): khai báo service `agent` ở đây
-  # agent:
-  #   build: .
-  #   ...
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: ${PORT:-8000}
+      REDIS_URL: redis://redis:6379/0
+      AGENT_API_KEY: ${AGENT_API_KEY}
+    # --- SỬA LỖI: ĐƯA HEALTHCHECK RA KHỎI ENVIRONMENT ---
+    # Khối này phải ngang cấp với 'environment'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # -----------------------------------------------------
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agent_network
 
-volumes:
-  redis-data:
+networks:
+  agent_network:
+    driver: bridge
