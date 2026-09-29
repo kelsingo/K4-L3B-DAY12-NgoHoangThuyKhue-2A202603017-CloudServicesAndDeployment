@@ -12,15 +12,15 @@
 |-----|----------|
 | Họ và tên | Ngô Hoàng Thụy Khuê |
 | Mã học viên | 2A202603017 |
-| Repo | (điền link repo K4-L3B-DAY12-HoVaTen-MSSV-CloudServicesAndDeployment) |
+| Repo | https://github.com/kelsingo/K4-L3B-DAY12-NgoHoangThuyKhue-2A202603017-CloudServicesAndDeployment |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
+| Public URL | https://k4-l3b-day12-ngohoangthuykhue-2a202603017-clouds-production.up.railway.app/ |
 | Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Ngày deploy | 29/09/2026 |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | Redis add-on của platform |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -44,15 +44,15 @@ Thay `<URL>` bằng Public URL ở trên:
 curl -i <URL>/health
 
 # 2. Readiness — mong đợi 200 {"status":"ready"} (đã nối được Redis)
-curl -i <URL>/ready
+curl -i https://k4-l3b-day12-ngohoangthuykhue-2a202603017-clouds-production.up.railway.app/ready
 
 # 3. Không có API key — mong đợi 401
-curl -i -X POST <URL>/ask \
+curl -i -X POST https://k4-l3b-day12-ngohoangthuykhue-2a202603017-clouds-production.up.railway.app/ask \
   -H "Content-Type: application/json" \
   -d '{"question":"Hello"}'
 
 # 4. Có API key — mong đợi 200 kèm câu trả lời
-curl -i -X POST <URL>/ask \
+curl -i -X POST https://k4-l3b-day12-ngohoangthuykhue-2a202603017-clouds-production.up.railway.app/ask \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $AGENT_API_KEY" \
   -H "X-User-Id: sv-test" \
@@ -73,7 +73,27 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+HTTP/2 200 
+content-type: application/json
+date: Tue, 29 Sep 2026 14:08:30 GMT
+server: railway-hikari
+x-railway-request-id: WT6_OM_8SfOB8vOZljLL4A
+content-length: 57
+x-hikari-trace: hkg1.hn7d
+x-railway-edge: hkg1
+
+{"status":"ok","service":"day12-agent","version":"1.0.0"}%
+```
+
+```
+HTTP/2 401 
+content-type: application/json
+date: Tue, 29 Sep 2026 13:39:55 GMT
+server: railway-hikari
+x-railway-request-id: P6Ui7oDARyGfUOkK9I3ezw
+content-length: 39
+x-hikari-trace: hkg1.hn7d
+x-railway-edge: hkg1
 ```
 
 ## Ảnh Chụp Màn Hình
