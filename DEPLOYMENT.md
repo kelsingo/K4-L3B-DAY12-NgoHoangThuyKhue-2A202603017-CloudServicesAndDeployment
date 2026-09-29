@@ -19,7 +19,7 @@
 | Mục | Nội dung |
 |-----|----------|
 | Public URL | https://k4-l3b-day12-ngohoangthuykhue-2a202603017-clouds-production.up.railway.app/ |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
+| Platform | Railway |
 | Ngày deploy | 29/09/2026 |
 
 ## Biến Môi Trường Đã Set Trên Cloud

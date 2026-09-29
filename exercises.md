@@ -53,7 +53,7 @@ docker images | grep agent
 
 Giải thích: phần dung lượng chênh lệch đó là những gì?
 
-> *Phần chênh lệch là những thứ chỉ cần lúc build mà không cần lúc chạy: cache của pip, công cụ build/biên dịch (gcc, header, wheel tạm) và các file trung gian trong layer của builder. Bản multi-stage chỉ copy thư mục đã cài sẵn (/install) sang image runtime, nên các thứ đó bị bỏ lại ở stage builder. Image nhỏ hơn kéo và khởi động nhanh hơn, và có ít thành phần để kẻ tấn công lợi dụng hơn.*
+Phần chênh lệch là những thứ chỉ cần lúc build mà không cần lúc chạy: cache của pip, công cụ build/biên dịch (gcc, header, wheel tạm) và các file trung gian trong layer của builder. Bản multi-stage chỉ copy thư mục đã cài sẵn (/install) sang image runtime, nên các thứ đó bị bỏ lại ở stage builder. Image nhỏ hơn kéo và khởi động nhanh hơn, và có ít thành phần để kẻ tấn công lợi dụng hơn.
 
 ---
 
@@ -63,7 +63,7 @@ Sửa một ký tự trong `app/main.py` rồi build lại. Với Dockerfile c�
 layer nào được dùng lại từ cache, layer nào phải chạy lại? Nếu bạn đặt
 `COPY . .` lên trước `RUN pip install` thì kết quả khác thế nào?
 
-> *Khi sửa một ký tự trong app/main.py: Dùng lại từ cache: `FROM`, `WORKDIR`, `COPY` `requirements.txt`, `RUN pip install` (vì `requirements.txt` không đổi), và `COPY --from=builder`. -> Chạy lại: layer `COPY` code (nội dung đổi) và mọi layer đứng sau nó. Các bước này rất nhanh. Nếu đặt `COPY . .` lên trước `RUN pip install`: mọi thay đổi ở bất kỳ file nào làm đổi checksum của layer `COPY . .`, nên layer đó và tất cả layer sau nó, gồm cả pip install, bị vô hiệu hóa. Mỗi lần sửa code sẽ tải và cài lại toàn bộ thư viện, mất hàng chục giây đến vài phút thay vì vài giây. Vì vậy thứ tự đúng là copy file ít đổi (`requirements.txt`), cài thư viện, rồi mới copy code hay đổi.*
+Khi sửa một ký tự trong app/main.py: Dùng lại từ cache: `FROM`, `WORKDIR`, `COPY` `requirements.txt`, `RUN pip install` (vì `requirements.txt` không đổi), và `COPY --from=builder`. -> Chạy lại: layer `COPY` code (nội dung đổi) và mọi layer đứng sau nó. Các bước này rất nhanh. Nếu đặt `COPY . .` lên trước `RUN pip install`: mọi thay đổi ở bất kỳ file nào làm đổi checksum của layer `COPY . .`, nên layer đó và tất cả layer sau nó, gồm cả pip install, bị vô hiệu hóa. Mỗi lần sửa code sẽ tải và cài lại toàn bộ thư viện, mất hàng chục giây đến vài phút thay vì vài giây. Vì vậy thứ tự đúng là copy file ít đổi (`requirements.txt`), cài thư viện, rồi mới copy code hay đổi.
 
 ---
 
@@ -89,9 +89,9 @@ phút đồng hồ (reset lúc giây 00), một người dùng có thể gửi t
 request trong 2 giây liên tiếp khi hạn mức là 10/phút? Giải thích cách đạt được
 con số đó.
 
-> *Tối đa 20 request trong 2 giây.
+Tối đa 20 request trong 2 giây.
 Cách đạt được: cách đếm theo phút đồng hồ reset bộ đếm ở giây 00. Người dùng chờ tới giây 59 của phút N và gửi 10 request, được phép vì bộ đếm phút N chưa đầy. Một giây sau đồng hồ sang giây 00 của phút N+1, bộ đếm về 0, và họ gửi thêm 10 request nữa. Vậy 20 request trong khoảng 2 giây, gấp đôi hạn mức 10/phút.
-Sliding window 60 giây tính trên 60 giây gần nhất tại mỗi thời điểm, nên 10 request lúc giây 59 vẫn nằm trong cửa sổ khi giây 00 tới, và request thứ 11 bị 429. Trong bất kỳ khoảng 60 giây nào chỉ có tối đa 10 request.*
+Sliding window 60 giây tính trên 60 giây gần nhất tại mỗi thời điểm, nên 10 request lúc giây 59 vẫn nằm trong cửa sổ khi giây 00 tới, và request thứ 11 bị 429. Trong bất kỳ khoảng 60 giây nào chỉ có tối đa 10 request.
 
 ---
 
@@ -100,8 +100,8 @@ Sliding window 60 giây tính trên 60 giây gần nhất tại mỗi thời đi
 Hai cơ chế này khác nhau ở điểm nào? Cho một tình huống mà rate limit cho qua
 nhưng cost guard phải chặn, và một tình huống ngược lại.
 
->- Rate limit giới hạn tốc độ (số request trong 60 giây), bảo vệ khỏi spam/bot và giữ hệ thống ổn định. Trả 429. 
-> - Cost guard giới hạn tổng chi phí tích lũy trong tháng theo user, bảo vệ ngân sách. Trả 402.
+- Rate limit giới hạn tốc độ (số request trong 60 giây), bảo vệ khỏi spam/bot và giữ hệ thống ổn định. Trả 429. 
+- Cost guard giới hạn tổng chi phí tích lũy trong tháng theo user, bảo vệ ngân sách. Trả 402.
 
 Rate limit cho qua nhưng cost guard chặn: user gửi đều 5 request/phút (dưới hạn mức 10) nhưng mỗi câu hỏi rất dài, tốn nhiều token. Cuối tháng tổng chi phí chạm ngân sách, nên bị 402 dù tốc độ vẫn bình thường.
 Ngược lại: user mới, ngân sách còn gần nguyên, chạy script gửi 50 câu hỏi ngắn trong 5 giây. Tổng chi phí chỉ vài cent nên không bị 402, nhưng từ request thứ 11 trở đi bị 429 vì vượt tốc độ.---
