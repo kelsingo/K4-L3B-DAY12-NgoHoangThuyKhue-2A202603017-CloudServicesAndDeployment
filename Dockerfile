@@ -20,6 +20,7 @@ COPY requirements.txt .
 # Cài đặt dependencies vào thư mục cục bộ (ví dụ: /install)
 # `--no-cache-dir` giúp image không phình to do lưu trữ cache của pip.
 RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir uvicorn
 
 # -------------------------------------------------------------------
 # STAGE 2: Runtime (Production Image)
