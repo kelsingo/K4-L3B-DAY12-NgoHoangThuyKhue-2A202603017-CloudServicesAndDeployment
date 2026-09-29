@@ -19,8 +19,7 @@ COPY requirements.txt .
 
 # Cài đặt dependencies vào thư mục cục bộ (ví dụ: /install)
 # `--no-cache-dir` giúp image không phình to do lưu trữ cache của pip.
-RUN pip install --user --no-cache-dir -r requirements.txt
-RUN pip install --user --no-cache-dir uvicorn
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # -------------------------------------------------------------------
 # STAGE 2: Runtime (Production Image)
@@ -45,12 +44,13 @@ RUN groupadd -g ${GROUP_ID} appgroup && \
 WORKDIR /app
 
 # Copy toàn bộ thư viện đã cài đặt từ stage 'builder' sang stage này.
-# Thư viện thường nằm ở /root/.local nếu dùng --user, hoặc /usr/local nếu cài global.
-# Ở đây ta copy từ vị trí mặc định của user root trong builder sang user của runtime.
-COPY --from=builder /root/.local /root/.local
+# Cài vào /usr/local (đọc/thực thi được bởi mọi user). KHÔNG dùng /root/.local:
+# thư mục /root có quyền 700 nên appuser không chạy được uvicorn
+# ("sh: uvicorn: Permission denied").
+COPY --from=builder /install /usr/local
 
-# Đảm bảo các script binary (nếu có) trong .local/bin có thể được thực thi
-ENV PATH=/root/.local/bin:$PATH
+# Fail the build (not the deploy) if dependencies are not importable
+RUN python -c "import uvicorn, fastapi, redis; print('deps OK')"
 
 # Copy source code ứng dụng từ máy host vào image
 COPY . .
