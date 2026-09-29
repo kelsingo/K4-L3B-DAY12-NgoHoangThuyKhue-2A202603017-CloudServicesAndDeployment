@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     #     agent_api_key: str
     port: int = 8000
     agent_api_key: str
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://default:vHnRusQWycQqmTPnmRadLUOcRwMoyFlG@redis.railway.internal:6379"
     rate_limit_per_minute: int = 10
     monthly_budget_usd: float = 10.0
     log_level: str = "INFO"
