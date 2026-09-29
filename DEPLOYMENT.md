@@ -84,7 +84,18 @@ x-railway-edge: hkg1
 
 {"status":"ok","service":"day12-agent","version":"1.0.0"}%
 ```
+```
+HTTP/2 200 
+content-type: application/json
+date: Tue, 29 Sep 2026 14:52:55 GMT
+server: railway-hikari
+x-railway-request-id: qA1C_rXYQJ2ykXJt9o6EoQ
+content-length: 31
+x-hikari-trace: hkg1.aebn
+x-railway-edge: hkg1
 
+{"status":"ready","redis":true}%
+```
 ```
 HTTP/2 401 
 content-type: application/json
