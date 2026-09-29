@@ -70,4 +70,4 @@ USER appuser
 
 # Lệnh khởi chạy ứng dụng. Sử dụng biến môi trường PORT.
 # Cần đảm bảo app.main:app trong CMD khớp với cấu trúc project của bạn.
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
